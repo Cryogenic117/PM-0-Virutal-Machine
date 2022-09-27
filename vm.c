@@ -30,33 +30,94 @@ void execute(int trace_flag, instruction *code)
 		// Fetch
 		PC += 1;
 		IR = code[PC];
+
+		// Print Instruction
+		print_instruction(PC,IR);
 		// Execute
 		switch (IR.op)
 	{
-		case LIT :  break;
+		case LIT :
+			SP++;
+			stack[SP] = IR.m;
+			break;
 		case OPR :
 			switch (IR.m)
 			{
-				case ADD :  break;
-				case SUB :  break;
-				case MUL :  break;
-				case DIV :  break;
-				case EQL :  break;
-				case NEQ :  break;
-				case LSS :  break;
-				case LEQ :  break;
-				case GTR :  break;
-				case GEQ :  break;
+				case ADD :
+					SP--;
+					stack[SP] = (stack[SP] + stack[SP+1]);
+					break;
+				case SUB :
+					SP--;
+					stack[SP] = (stack[SP] - stack[SP+1]);
+					break;
+				case MUL :
+					SP--;
+					stack[SP] = (stack[SP] * stack[SP+1]);
+					break;
+				case DIV :
+					SP--;
+					stack[SP] = (stack[SP] / stack[SP+1]);
+					break;
+				case EQL :
+					SP--;
+					stack[SP] = stack[SP] == stack[SP+1];
+					break;
+				case NEQ :
+					SP--;
+					stack[SP] = (stack[SP] != stack[SP+1]);
+					break;
+				case LSS :
+					SP--;
+					stack[SP] = (stack[SP] < stack[SP+1]);
+					break;
+				case LEQ :
+					SP--;
+					stack[SP] = (stack[SP] <= stack[SP+1]);
+					break;
+				case GTR : 
+					SP--;
+					stack[SP] = (stack[SP] > stack[SP+1]);
+					break;
+				case GEQ :
+					SP--;
+					stack[SP] = (stack[SP] >= stack[SP+1]);
+					break;
 			}
 			break;
-		case LOD :  break;
-		case STO :  break;
-		case CAL :  break;
-		case RTN :  break;
-		case INC :  break;
-		case JMP :  break;
-		case JPC :  break;
-		case SYS : 
+		case LOD :
+			SP++;
+			stack[SP] = stack[base(stack,BP,IR.l) + M];
+			break;
+		case STO :
+			stack[base(stack,BP,IR.l) + M] = stack[SP];
+			SP--;
+			break;
+		case CAL :
+			stack[SP+1] = base(stack, BP, IR.l); //Static Link
+			stack[SP+2] = BP;					// Dynamic Link
+			stack[SP+3] = PC;				   // Return Address
+			BP = SP + 1;
+			PC = IR.m;
+			break;
+		case RTN : 
+			SP = BP - 1;
+			BP = stack[SP+2];	// Dynamic Link
+			PC = stack[SP+3]; // Return Address
+			break;
+		case INC :
+			SP += IR.m;
+			break;
+		case JMP :
+			PC = IR.m;
+			break;
+		case JPC :
+			if(stack[SP] == 0) {
+				PC = IR.m;
+			}
+			SP--;
+			break;
+		case SYS :
 			switch (IR.m)
 			{
 				case WRT :
